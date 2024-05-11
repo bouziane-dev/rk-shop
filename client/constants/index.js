@@ -5,7 +5,6 @@ export const NAV_LINKS = [
 ]
 
 // WILAYAS (states)
-
 export const WILAYAS = [
   { name: 'أدرار', value: 'Adrar' },
   { name: 'الشلف', value: 'Chlef' },
