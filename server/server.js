@@ -5,13 +5,18 @@ require("dotenv").config();
 
 const app = express();
 
+//* Routes
+const orderRoutes = require("./routes/orders.js");
+
 //* Middleware
 app.use(express.json()); //? This allows us to access the req data from the req handler
 
-//* Console log the request type and path
-app.use((req, res, next) => {
+//* routes
+app.use("/api/orders", orderRoutes);
+
+//* Print the request type and path
+app.use((req) => {
   console.log(req.path, req.method);
-  next();
 });
 
 mongoose
@@ -25,4 +30,4 @@ mongoose
     console.log(error);
   });
 
-module.exports = mongoose; // Export the mongoose connection for use in other files
+module.exports = mongoose; //? Export the mongoose connection for use in other files
