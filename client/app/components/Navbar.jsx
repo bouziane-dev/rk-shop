@@ -29,7 +29,7 @@ const Navbar = () => {
         </ul>
       </div>
 
-      <Link href='/' className='regular-20'>
+      <Link href='/' className='regular-20 font-bold'>
         RK Shop
       </Link>
     </nav>
