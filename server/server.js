@@ -1,9 +1,9 @@
 const mongoose = require("mongoose");
 const express = require("express");
 
-require("dotenv").config();
-
 const app = express();
+
+require("dotenv").config();
 
 //* Configuring CORS
 const allowedOrigin = "http://localhost:3000"; //? Allowed origin (frontend URL)

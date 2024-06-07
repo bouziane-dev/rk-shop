@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { WILAYAS } from '../../../constants'
+import { useRouter } from 'next/navigation'
 import { submitFormData } from '../../functions/api/formSubmitEndpoint'
 
 const Form = () => {
@@ -18,6 +19,14 @@ const Form = () => {
   const [price, setPrice] = useState(0)
   const [deliveryPrice, setDeliveryPrice] = useState(0)
   const [total, setTotal] = useState(0)
+
+  //? Error handling state
+  const [formErrors, setFormErrors] = useState([])
+
+  //? Success form submission
+  const [successState, setSuccessState] = useState(false)
+
+  const router = useRouter()
 
   //* Handler for quantity change
   const handleQuantityChange = event => {
@@ -74,29 +83,41 @@ const Form = () => {
   const handleSubmit = async e => {
     e.preventDefault()
 
-    //? Convert phone to a number
-    const phoneAsNumber = parseInt(phone)
+    //? Convert size to a number
+    const sizeAsNumber = parseInt(size)
 
-    //? Check if all required fields are filled
-    if (
-      fullname &&
-      phone &&
-      wilaya &&
-      address &&
-      product &&
-      size &&
-      price &&
-      deliveryPrice &&
-      total
-    ) {
+    //? Check for empty fields
+    const errors = []
+    if (!fullname || fullname.length < 3 || fullname.length > 50) {
+      errors.push('Fullname')
+    }
+    if (!phone || !/^\d{10}$/.test(phone)) {
+      errors.push('Phone')
+    }
+    if (!wilaya) errors.push('Wilaya')
+    if (!address || address.length < 5 || address.length > 150) {
+      errors.push('Address')
+    }
+    if (!product) errors.push('Product')
+    if (!size) errors.push('Size')
+
+    //* Update error state if validation fails
+    if (errors.length) {
+      console.log('errors', errors)
+      setFormErrors(errors)
+      return //? Exit function after setting errors
+    }
+
+    //? Submit form data only if there are no errors
+    if (!errors.length) {
       //* Gather form data
       const orderData = {
         fullname: fullname,
-        phone: phoneAsNumber,
+        phone: phone,
         wilaya: wilaya,
         address: address,
         product: product,
-        size: size,
+        size: sizeAsNumber,
         quantity: quantity,
         price: price,
         deliveryPrice: deliveryPrice,
@@ -105,23 +126,34 @@ const Form = () => {
 
       try {
         //* Submit form data
+
         const response = await submitFormData(orderData)
-        console.log('Form submitted successfully:', response)
 
-        //* Clear form fields
-        setFullname('')
-        setPhone('')
-        setWilaya('')
-        setAddress('')
-        setProduct('')
-        setSize('')
-        setQuantity(1)
-        setDeliveryPrice(0)
-        setPrice(0)
-        setTotal(0)
+        if (typeof response === 'object') {
+          console.log('Form submitted successfully:', response)
 
-        //* Navigate user back to home page
-        window.location.href = 'http://localhost:3000'
+          //* Clear form fields
+          setFullname('')
+          setPhone('')
+          setWilaya('')
+          setAddress('')
+          setProduct('')
+          setSize('')
+          setQuantity(1)
+          setDeliveryPrice(0)
+          setPrice(0)
+          setTotal(0)
+
+          //* Set success state for 2 seconds
+          setSuccessState(true)
+          setTimeout(() => {
+            setSuccessState(false)
+            //* Navigate user back to home page
+            router.push('/')
+          }, 3000)
+        } else {
+          setFormErrors(errors)
+        }
       } catch (error) {
         console.error('Error submitting form:', error)
       }
@@ -179,6 +211,13 @@ const Form = () => {
             >
               الإسم الكامل
             </label>
+            {formErrors &&
+              formErrors.length > 0 &&
+              formErrors.includes('Fullname') && (
+                <span className='text-xs text-red-500'>
+                  Fullname must be between 3 and 50 characters long.
+                </span>
+              )}
           </div>
 
           <div className='group relative z-0 mb-5 w-full'>
@@ -198,6 +237,14 @@ const Form = () => {
             >
               رقم الهاتف
             </label>
+            {formErrors &&
+              formErrors.length > 0 &&
+              formErrors.includes('Phone') && (
+                <span className='text-xs text-red-500'>
+                  Phone number must contain only digits (0-9) and be 10 digits
+                  long.
+                </span>
+              )}
           </div>
 
           <div className='mb-3 mt-8'>
@@ -213,6 +260,12 @@ const Form = () => {
                 </option>
               ))}
             </select>
+
+            {formErrors &&
+              formErrors.length > 0 &&
+              formErrors.includes('Wilaya') && (
+                <span className='text-xs text-red-500'>Wilaya is required</span>
+              )}
           </div>
 
           <div className='group relative z-0 mb-5 w-full'>
@@ -232,6 +285,13 @@ const Form = () => {
             >
               العنوان
             </label>
+            {formErrors &&
+              formErrors.length > 0 &&
+              formErrors.includes('Address') && (
+                <span className='text-xs text-red-500'>
+                  Address must be between 5 and 150 characters long
+                </span>
+              )}
           </div>
 
           <div className='mb-3 mt-8'>
@@ -246,11 +306,18 @@ const Form = () => {
               <option value={'stan-smith-bleu'}>Stan Smith (bleu)</option>
               <option value={'stan-smith-vert'}>Stan Smith (vert)</option>
             </select>
+            {formErrors &&
+              formErrors.length > 0 &&
+              formErrors.includes('Product') && (
+                <span className='text-xs text-red-500'>
+                  Please choose a product
+                </span>
+              )}
           </div>
 
           <div className='group relative z-0 mb-5 w-full'>
             <input
-              type='name'
+              type='number'
               name='floating_name'
               id='floating_name'
               className='peer block w-full appearance-none border-0 border-b-2 border-gray-300 bg-transparent px-0 py-2.5 text-sm text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-0   dark:focus:border-blue-500'
@@ -265,6 +332,13 @@ const Form = () => {
             >
               المقاس
             </label>
+            {formErrors &&
+              formErrors.length > 0 &&
+              formErrors.includes('Size is required') && (
+                <span className='text-xs text-red-500'>
+                  Size must be 2 digits
+                </span>
+              )}
           </div>
 
           <label
@@ -337,21 +411,27 @@ const Form = () => {
 
           <div className='mt-7 border border-dashed border-gray-500 bg-gray-200 py-2'>
             <div className='mt-5 flex flex-row justify-between px-5'>
-              <h className='mb-2'>السعر</h>
+              <p className='mb-2'>السعر</p>
               <p className='text-lg '>{price * quantity}.00 دج</p>
             </div>
 
             <div className='mt-5 flex flex-row justify-between px-5'>
-              <h className='mb-2'>سعر التوصيل</h>
+              <p className='mb-2'>سعر التوصيل</p>
               <p className='text-lg '>{deliveryPrice}.00 دج</p>
             </div>
 
             <div className='mt-5 flex w-full flex-row justify-between border border-t-gray-500 px-5 pt-2'>
-              <h className='mb-2 font-semibold'> السعر الإجمالي</h>
+              <p className='mb-2 font-semibold'> السعر الإجمالي</p>
               <p className='text-lg font-semibold'>{total}.00 دج</p>
             </div>
           </div>
 
+          {formErrors &&
+            formErrors.length > 0 && ( //? Check if formErrors exists and has elements
+              <span className='text-xs text-red-500'>
+                الرجاء إدخال معلومات صحيحة
+              </span>
+            )}
           <button
             onClick={e => handleSubmit(e)}
             type='submit'
@@ -359,6 +439,14 @@ const Form = () => {
           >
             تأكيد الطلب
           </button>
+
+          {successState && (
+            <div className='fixed left-0 top-0 z-50 flex h-full w-full items-center justify-center bg-gray-900 bg-opacity-50'>
+              <p className='bg-green-600 px-6 py-4 text-xl font-bold text-white'>
+                تمت إرسال الطلب بنجاح
+              </p>
+            </div>
+          )}
         </form>
       </div>
     </section>

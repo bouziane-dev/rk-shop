@@ -7,10 +7,17 @@ const orderSchema = new Schema(
     fullname: {
       type: String,
       required: true,
+      minlength: 3,
+      maxlength: 50,
     },
     phone: {
-      type: Number,
+      type: String,
       required: true,
+      validate: {
+        validator: (value) => /^\d{10}$/.test(value), //? Ensures 10 digits
+        message: (props) =>
+          `${props.value} is not a valid phone number (10 digits only).`,
+      },
     },
     wilaya: {
       type: String,
@@ -19,6 +26,7 @@ const orderSchema = new Schema(
     address: {
       type: String,
       required: true,
+      maxlength: 255,
     },
     product: {
       type: String,
